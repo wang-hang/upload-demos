@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>upload demo</title>
+</head>
+<body>
+  <h1>Upload Demo</h1>
+  <form id="upload-form">
+    <input type="file" name="photo" id="upload" multiple>
+    <button id="submit-bt" type="submit">submit</button>
+  </form>
+  <div id="progress-list"></div>
+  <script>
+    const submitBtn = document.getElementById('submit-btn')
+    const formEl = document.getElementById('upload-form')
+    const fileInput = document.getElementById('upload')
+    const progressListEl = document.getElementById('progress-list')
+    
+    formEl.addEventListener('submit', handleSubmit)
+
+    function handleSubmit(e){
+      e.preventDefault()
+      const fileList = fileInput.files
+      toArray(fileList).forEach(uploadFile)
+      
+    }
+
+
+    function uploadFile(file){
+      const fd = new FormData()
+      fd.append('photo', file)
+      const xhr = new XMLHttpRequest()
+      xhr.onreadystatechange = function(){
+        if(xhr.readyState === 4 && xhr.status === 200){
+          console.log(xhr.responseText)
+        }
+      }
+      xhr.upload.onprogress = function(e){
+        updateProgress(file.name, e)
+      }
+
+      xhr.open('POST', '/upload')
+      xhr.send(fd)
+    }
+
+    function updateProgress(name, e){
+      const percent = e.loaded / e.total
+      const percentText = `${name}: ${Math.floor(percent * 100)}%`
+      const progressItem = document.getElementById(name)
+      if(progressItem){
+        progressItem.innerText = percentText
+      }else{
+        const progressEl = document.createElement('p')
+        progressEl.id = name
+        progressEl.innerText = percentText
+        progressListEl.appendChild(progressEl)
+      }
+      const progressList = document.body.querySelectorAll('#progress-list progress-item')
+    }
+
+
+    function toArray(arrayLike){
+      return Array.prototype.slice.call(arrayLike,0)
+    }
+  
+  </script>
+</body>
+</html>

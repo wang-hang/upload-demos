@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Slice Upload Demo</title>
+</head>
+<body>
+  <h1>Slice Upload Demo</h1>
+  <input type="file" name="photo" id="upload">
+  <button id="submit-btn" type="submit">submit</button>
+  <p id="progress"></p>
+  <script>
+    const submitBtn = document.getElementById('submit-btn')
+    const fileInput = document.getElementById('upload')
+    
+
+    function uploadFile(file, index, name, tag){ // tag用来给后端确定是哪个文件
+      return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest()
+        const fd = new FormData()
+        fd.append('photo', file)
+        fd.append('index', index)
+        fd.append('filename', name)
+        fd.append('tag', tag)
+        xhr.onreadystatechange = () => {
+          if(xhr.readyState === 4 && xhr.status === 200){
+            console.log(`upload ${index} success`)
+            resolve()
+          }
+        }
+        // xhr.upload.onprogress = updateProgress
+        xhr.open('POST', '/slice-upload')
+        xhr.send(fd)
+      })
+    }
+    
+    function updateProgress(e){
+      const percent = e.loaded / e.total
+      document.getElementById('progress').innerText = `${Math.floor(percent * 100)}%`
+    }
+
+    function handleSubmit(){
+      const file = fileInput.files[0]
+      const tag = +Date.now()
+      const fileList = sliceFile(file)
+      const promises = []
+      fileList.forEach((f,index) => {
+        promises.push(uploadFile(f, index, file.name, tag))
+      })
+      Promise.all(promises).then(res => {
+        console.log('all upload success')
+        uploadComplete(tag, file.name)
+      })
+    }
+    function sliceFile(file){
+      const size = file.size
+      const perSize = 500 * 1024 // 500kb
+      const forTimes = Math.ceil(size / perSize)
+      const fileFragmentList = []
+      for(let i = 0;i<forTimes;i++){
+        fileFragmentList.push(file.slice(i * perSize, (i + 1) * perSize))
+      }
+      return fileFragmentList
+    }
+
+    function uploadComplete(tag, filename){
+      return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest()
+        xhr.onreadystatechange = () => {
+          if(xhr.readyState === 4 && xhr.status === 200){
+            console.log(`complete Success`)
+            resolve()
+          }
+        }
+        xhr.open('GET', `/slice-upload-complete?tag=${tag}&filename=${filename}`)
+        xhr.send()
+      })
+    }
+
+    submitBtn.addEventListener('click', handleSubmit)
+
+  </script>
+</body>
+</html>

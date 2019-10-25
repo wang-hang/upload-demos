@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Paste Upload Demo</title>
+  <style>
+    .paste-area{
+      width: 500px;
+      height: 500px;
+      background: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>Paste Upload Demo</h1>
+  <div id="paste-area" class="paste-area" contenteditable="">在这粘贴</div>
+  <p id="progress"></p>
+  <script>
+    const pasteArea = document.getElementById('paste-area')
+
+    function handlepaste(e){
+      const file = e.clipboardData.files[0]
+      uploadFile(file)
+    }
+
+    function uploadFile(file){
+      const xhr = new XMLHttpRequest()
+      const fd = new FormData()
+      fd.append('photo', file)
+      xhr.onreadystatechange = () => {
+        if(xhr.readyState === 4 && xhr.status === 200){
+          console.log('success')
+        }
+      }
+      xhr.upload.onprogress = updateProgress
+      xhr.open('POST', '/upload')
+      xhr.send(fd)
+    }
+    
+    function updateProgress(e){
+      const percent = e.loaded / e.total
+      document.getElementById('progress').innerText = `${Math.floor(percent * 100)}%`
+    }
+    pasteArea.addEventListener('paste', handlepaste)
+  </script>
+</body>
+</html>

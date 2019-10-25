@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Drag Upload Demo</title>
+  <style>
+    .drag-area{
+      width: 500px;
+      height: 500px;
+      background: #ccc;
+      transition: .3s;
+    }
+    .over{
+      background: #eee;
+      transition: .3s;
+    }
+  </style>
+</head>
+<body>
+  <h1>Drag Upload Demo</h1>
+  <div id="drag-area" class="drag-area"></div>
+  <p id="progress"></p>
+  <script>
+    const dragArea = document.getElementById('drag-area')
+    
+    function handleDrop(e){
+      e.preventDefault()
+      const file = e.dataTransfer.files[0]
+      uploadFile(file)
+    }
+    
+    function handleDragover(e){
+      e.preventDefault()
+      dragArea.classList.add('over')
+    }
+    function handleDragleave(e){
+      e.preventDefault()
+      dragArea.classList.remove('over')
+    }
+  
+    function uploadFile(file){
+      const xhr = new XMLHttpRequest()
+      const fd = new FormData()
+      fd.append('photo', file)
+      xhr.onreadystatechange = () => {
+        if(xhr.readyState === 4 && xhr.status === 200){
+          console.log('success')
+        }
+      }
+      xhr.upload.onprogress = updateProgress
+      xhr.open('POST', '/upload')
+      xhr.send(fd)
+    }
+    
+    function updateProgress(e){
+      const percent = e.loaded / e.total
+      document.getElementById('progress').innerText = `${Math.floor(percent * 100)}%`
+    }
+
+    // 事件绑定
+
+    // drop事件和dragover事件必须都监听并e.preventDefault()
+    dragArea.addEventListener('drop', handleDrop)
+    dragArea.addEventListener('dragover', handleDragover)
+    dragArea.addEventListener('dragleave', handleDragleave)
+  </script>
+</body>
+</html>
